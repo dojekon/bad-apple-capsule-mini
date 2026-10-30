@@ -10,7 +10,6 @@ OUT = 'out'
 FPS = 30
 RING_FPS = 15
 RATE = 48000
-TEST_SECONDS = 10
 
 CELL_W, CELL_H = 12, 28
 DIGIT_ASPECT = 0.55
@@ -157,25 +156,22 @@ def ring_frames(n):
     return lines
 
 
-def write(name, lines, fps):
+def write(name, lines):
     with open(f'{OUT}/{name}.txt', 'w') as fh:
         fh.write('\n'.join(lines) + '\n')
-    with open(f'{OUT}/{name}_test.txt', 'w') as fh:
-        fh.write('\n'.join(lines[:TEST_SECONDS * fps]) + '\n')
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     inverted, original = panel_frames()
     n = len(inverted)
-    write('badapple_frames', inverted, FPS)
-    write('badapple_frames_orig', original, FPS)
-    write('badapple_ring', ring_frames(math.ceil(n * RING_FPS / FPS)), RING_FPS)
+    write('badapple_frames', inverted)
+    write('badapple_frames_orig', original)
+    write('badapple_ring', ring_frames(math.ceil(n * RING_FPS / FPS)))
 
     encode = ['-af', 'aresample=resampler=soxr:precision=28', '-ar', str(RATE), '-ac', '2',
               '-c:a', 'libmp3lame', '-q:a', '2']
     ffmpeg('-i', AUDIO, *encode, out=f'{OUT}/badapple.mp3')
-    ffmpeg('-i', AUDIO, '-t', str(TEST_SECONDS), *encode, out=f'{OUT}/badapple_test.mp3')
     print(f'{n} frames, {n / FPS:.2f} s')
 
 

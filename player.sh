@@ -5,11 +5,11 @@ set -u
 DIR=/root/badapple
 VARIANT=
 [ "${1:-}" = --orig ] && { VARIANT=_orig; shift; }
-TEST=
-[ "${1:-}" = --test ] && TEST=_test
-FRAMES="${FRAMES:-$DIR/badapple_frames$VARIANT$TEST.txt}"
-RING="${RING:-$DIR/badapple_ring$TEST.txt}"
-AUDIO="${AUDIO:-$DIR/badapple$TEST.mp3}"
+LIMIT=0
+[ "${1:-}" = --test ] && LIMIT=10
+FRAMES="${FRAMES:-$DIR/badapple_frames$VARIANT.txt}"
+RING="${RING:-$DIR/badapple_ring.txt}"
+AUDIO="${AUDIO:-$DIR/badapple.mp3}"
 FPS="${FPS:-30}"
 RING_FPS="${RING_FPS:-15}"
 RING_BRIGHT="${RING_BRIGHT:-60}"
@@ -152,7 +152,7 @@ if [ -n "$TITLE" ]; then
 fi
 
 if [ -z "$NOSOUND" ]; then
-	mpg123 -q -s -r 48000 -e s16 "$AUDIO" | aplay -q -t raw -f S16_LE -c 2 -r 48000 &
+	mpg123 -q -s -r 48000 -e s16 "$AUDIO" | aplay -q -d "$LIMIT" -t raw -f S16_LE -c 2 -r 48000 &
 	APLAY_PID=$!
 	n=0
 	while [ $n -lt 200 ]; do
@@ -176,6 +176,7 @@ if [ -z "$NORING" ]; then
 		prev=
 		while IFS= read -r line; do
 			j=$((j + 1))
+			[ "$LIMIT" -gt 0 ] && [ $j -gt $((LIMIT * RING_FPS)) ] && { j=$((j - 1)); break; }
 			wait_slot $j "$RING_FPS" || continue
 			shown=$((shown + 1))
 			[ "$line" = "$prev" ] && continue
@@ -191,6 +192,7 @@ drawn=0
 prev=
 while IFS= read -r line; do
 	i=$((i + 1))
+	[ "$LIMIT" -gt 0 ] && [ $i -gt $((LIMIT * FPS)) ] && { i=$((i - 1)); break; }
 	wait_slot $i "$FPS" || continue
 	drawn=$((drawn + 1))
 	[ "$line" = "$prev" ] && continue

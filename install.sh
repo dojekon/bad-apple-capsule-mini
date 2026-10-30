@@ -11,7 +11,7 @@ CTL=$(mktemp -d)
 trap 'ssh -o ControlPath="$CTL/s" -O exit "$HOST" 2>/dev/null; rm -rf "$CTL"' EXIT
 SSH="ssh -o ControlMaster=auto -o ControlPath=$CTL/s -o ControlPersist=60"
 
-$SSH "$HOST" 'mkdir -p /root/badapple && rm -f /root/badapple/*.wav'
+$SSH "$HOST" 'mkdir -p /root/badapple && rm -f /root/badapple/*.wav /root/badapple/*_test.*'
 scp -o ControlPath="$CTL/s" player.sh out/*.txt out/*.mp3 "$HOST:/root/badapple/"
 
 $SSH "$HOST" sh -s <<'EOF'
